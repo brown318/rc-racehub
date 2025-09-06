@@ -33,6 +33,17 @@
 - **Branching:** `feat/*`, `fix/*`, `chore/*`. One topic per PR.
 - **Secrets:** Use `.env.local` templates; never commit real keys. Agents reference VS Code secret store or MCP secret manager.
 
+## Routing Architecture
+- **SUBDOMAIN ROUTING ONLY:** The application uses exclusively subdomain-based routing for tenant access
+  - **Pattern:** `{tenant-slug}.localhost:3000` or `{tenant-slug}.rcracehub.com`
+  - **Example:** `ntar.localhost:3000`, `ntar.localhost:3000/events`, `ntar.localhost:3000/results`
+  - **Implementation:** Root-level pages (`/app/page.tsx`, `/app/events/page.tsx`, `/app/results/page.tsx`) detect subdomain and fetch tenant data
+- **PATH-BASED ROUTING REMOVED:** The previous `/tenant/[slug]/*` routing pattern has been completely removed
+  - **Reason:** Eliminates routing conflicts, simplifies architecture, provides professional URLs
+  - **Status:** All `/app/tenant/[slug]/*` files deleted as of September 2025
+- **Tenant Detection:** Uses `headers().get('host')` to extract subdomain and query Sanity for tenant data
+- **Fallback:** Non-subdomain requests (`localhost:3000`) show the main platform landing page
+
 ## Guardrails & Checks
 - **Pre-merge checks** (required before agent marks task complete):
   - Lint/build pass
@@ -55,7 +66,8 @@
   2. Sanity → create `tenant`, seed `promo`, `event`, `post`
   3. GitHub → commit seed scripts + add `/tests/tenant.spec.ts`
   4. Stripe → (optional) create Connect test account for tenant
-- **Acceptance:** Visiting `{subdomain}.rcracehub.local` shows seeded hero, upcoming event, promo
+- **Acceptance:** Visiting `{subdomain}.localhost:3000` shows seeded hero, upcoming event, promo
+- **Routing:** Only subdomain routing is supported - no path-based `/tenant/[slug]` routes
 
 ### Add Product + Promo
 - Supabase: create product/variant/price with channel `online`

@@ -8,7 +8,27 @@ import { Calendar, Clock, ShoppingCart } from 'lucide-react'
 import { useTenant } from '@/lib/tenant-context'
 import { urlFor } from '@/lib/sanity'
 
-export function TenantSiteHome() {
+interface Event {
+  _id: string
+  title: string
+  slug: { current: string }
+  eventDate: string
+  eventTime?: string
+  location?: string
+  description?: string
+  entryFee?: number
+  maxParticipants?: number
+  currentParticipants?: number
+  categories?: string[]
+  featured?: boolean
+  registrationOpen?: boolean
+}
+
+interface TenantSiteHomeProps {
+  upcomingEvents?: Event[]
+}
+
+export function TenantSiteHome({ upcomingEvents = [] }: TenantSiteHomeProps) {
   const { tenant } = useTenant()
 
   if (!tenant) return null
@@ -122,7 +142,7 @@ export function TenantSiteHome() {
         </div>
       </section>
 
-      {/* Upcoming Events Placeholder */}
+      {/* Upcoming Events */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
@@ -140,139 +160,87 @@ export function TenantSiteHome() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span
-                    className="text-xs font-medium px-2.5 py-0.5 rounded"
-                    style={{
-                      backgroundColor: `${accentColor}20`,
-                      color: accentColor
-                    }}
-                  >
-                    Registration Open
-                  </span>
-                  <Calendar className="w-5 h-5" style={{ color: primaryColor }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Winter Championship Series - Round 1</h3>
-                <p className="text-sm text-gray-600 mb-4">December 14, 2024 at 9:00 AM</p>
-                <div className="space-y-1 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Stock 13.5T</span>
-                    <span className="text-gray-600">$25</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Modified 2WD</span>
-                    <span className="text-gray-600">$30</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Modified 4WD</span>
-                    <span className="text-gray-600">$30</span>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full"
-                  style={{
-                    backgroundColor: primaryColor,
-                    borderColor: primaryColor,
-                    color: 'white'
-                  }}
-                >
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
+          {upcomingEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {upcomingEvents.map((event) => (
+                <Card key={event._id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <span
+                        className="text-xs font-medium px-2.5 py-0.5 rounded"
+                        style={{
+                          backgroundColor: event.registrationOpen
+                            ? `${accentColor}20`
+                            : `${secondaryColor}20`,
+                          color: event.registrationOpen ? accentColor : secondaryColor
+                        }}
+                      >
+                        {event.registrationOpen ? 'Registration Open' : 'Upcoming'}
+                      </span>
+                      <Calendar className="w-5 h-5" style={{ color: primaryColor }} />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {new Date(event.eventDate).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                      {event.eventTime && ` at ${event.eventTime}`}
+                    </p>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span
-                    className="text-xs font-medium px-2.5 py-0.5 rounded"
-                    style={{
-                      backgroundColor: `${secondaryColor}20`,
-                      color: secondaryColor
-                    }}
-                  >
-                    Upcoming
-                  </span>
-                  <Calendar className="w-5 h-5" style={{ color: primaryColor }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">New Year Bash Race</h3>
-                <p className="text-sm text-gray-600 mb-4">January 4, 2025 at 10:00 AM</p>
-                <div className="space-y-1 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Novice Stock</span>
-                    <span className="text-gray-600">$20</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Expert Stock</span>
-                    <span className="text-gray-600">$25</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Open Modified</span>
-                    <span className="text-gray-600">$35</span>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full"
-                  style={{
-                    backgroundColor: primaryColor,
-                    borderColor: primaryColor,
-                    color: 'white'
-                  }}
-                >
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
+                    {event.categories && event.categories.length > 0 && (
+                      <div className="space-y-1 mb-4">
+                        {event.categories.slice(0, 3).map((category, index) => (
+                          <div key={index} className="flex justify-between text-sm">
+                            <span>{category}</span>
+                            <span className="text-gray-600">
+                              ${event.entryFee ? event.entryFee + (index * 5) : '25'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span
-                    className="text-xs font-medium px-2.5 py-0.5 rounded"
-                    style={{
-                      backgroundColor: `${secondaryColor}20`,
-                      color: secondaryColor
-                    }}
-                  >
-                    Upcoming
-                  </span>
-                  <Calendar className="w-5 h-5" style={{ color: primaryColor }} />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Spring Kickoff Classic</h3>
-                <p className="text-sm text-gray-600 mb-4">March 15, 2025 at 9:00 AM</p>
-                <div className="space-y-1 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Stock Touring</span>
-                    <span className="text-gray-600">$25</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Modified Touring</span>
-                    <span className="text-gray-600">$30</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Formula 1</span>
-                    <span className="text-gray-600">$35</span>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full"
-                  style={{
-                    backgroundColor: primaryColor,
-                    borderColor: primaryColor,
-                    color: 'white'
-                  }}
-                >
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      asChild
+                      style={{
+                        backgroundColor: primaryColor,
+                        borderColor: primaryColor,
+                        color: 'white'
+                      }}
+                    >
+                      <Link href={`/events/${event.slug.current}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No Upcoming Events
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Check back soon for exciting racing events!
+              </p>
+              <Button
+                asChild
+                style={{
+                  backgroundColor: primaryColor,
+                  borderColor: primaryColor,
+                  color: 'white'
+                }}
+              >
+                <Link href="/events">View All Events</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
